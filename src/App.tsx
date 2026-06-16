@@ -13,6 +13,8 @@ import { LiftPanel } from './components/LiftPanel';
 import { TrailInfoCard } from './components/TrailInfoCard';
 import { BottomBar } from './components/BottomBar';
 import { FPVController } from './components/FPVController';
+import { TrailLights } from './components/TrailLights';
+import { LightPanel } from './components/LightPanel';
 import { trails, Trail } from './data/trails';
 
 export default function App() {
@@ -21,6 +23,11 @@ export default function App() {
   const [fpvActive, setFpvActive] = useState(false);
   const [fpvTrailId, setFpvTrailId] = useState<string | null>(null);
   const [fpvProgress, setFpvProgress] = useState(0);
+  const [activeZones, setActiveZones] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    trails.forEach(t => { initial[t.id] = true; });
+    return initial;
+  });
 
   const handleTrailClick = useCallback((trail: Trail) => {
     if (fpvActive) return;
@@ -45,6 +52,18 @@ export default function App() {
     setFpvActive(false);
     setFpvTrailId(null);
     setFpvProgress(0);
+  }, []);
+
+  const handleToggleLight = useCallback((trailId: string) => {
+    setActiveZones(prev => ({ ...prev, [trailId]: !prev[trailId] }));
+  }, []);
+
+  const handleToggleAllLights = useCallback((on: boolean) => {
+    setActiveZones(() => {
+      const next: Record<string, boolean> = {};
+      trails.forEach(t => { next[t.id] = on; });
+      return next;
+    });
   }, []);
 
   const fpvTrail = fpvTrailId ? trails.find(t => t.id === fpvTrailId) ?? null : null;
@@ -93,6 +112,7 @@ export default function App() {
           highlightedTrail={highlightedTrail}
           onTrailClick={handleTrailClick}
         />
+        <TrailLights activeZones={activeZones} />
         <LiftLines />
         <Snowfall />
 
@@ -119,6 +139,11 @@ export default function App() {
 
       <WeatherPanel />
       <LiftPanel />
+      <LightPanel
+        activeZones={activeZones}
+        onToggle={handleToggleLight}
+        onToggleAll={handleToggleAllLights}
+      />
       {selectedTrail && (
         <TrailInfoCard
           trail={selectedTrail}

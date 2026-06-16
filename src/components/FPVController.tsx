@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, MutableRefObject } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Trail } from '../data/trails';
@@ -13,10 +13,9 @@ export function FPVController({ trail, progress, onProgressUpdate }: FPVControll
   const { camera } = useThree();
   const progressRef = useRef(progress);
   const targetRef = useRef(new THREE.Vector3());
-  const speed = 0.0008; // Controls animation speed
+  const speed = 0.0008;
 
-  // Build spline from trail points
-  const curve = useRef<THREE.CatmullRomCurve3>(null);
+  const curve = useRef<THREE.CatmullRomCurve3 | null>(null) as MutableRefObject<THREE.CatmullRomCurve3 | null>;
   useEffect(() => {
     const vecs = trail.points.map(p => new THREE.Vector3(p.x, p.y + 0.8, p.z));
     curve.current = new THREE.CatmullRomCurve3(vecs, false, 'catmullrom', 0.5);
