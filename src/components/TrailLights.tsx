@@ -57,10 +57,10 @@ function LightPole({ position, on }: { position: THREE.Vector3; on: boolean }) {
       {on && (
         <pointLight
           position={[lightOffset, poleHeight - 0.15, 0]}
-          intensity={1.2}
-          distance={16}
-          decay={2}
-          color="#ffdd88"
+          intensity={2.2}
+          distance={22}
+          decay={1.8}
+          color="#ffeebb"
         />
       )}
     </group>

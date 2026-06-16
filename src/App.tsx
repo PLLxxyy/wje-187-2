@@ -73,16 +73,16 @@ export default function App() {
       <Canvas
         shadows
         camera={{ position: [30, 25, 30], fov: 50, near: 0.1, far: 500 }}
-        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.8 }}
+        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.45 }}
       >
         <color attach="background" args={['#0a1628']} />
         <fog attach="fog" args={['#0a1628', 60, 120]} />
 
-        <ambientLight intensity={0.25} color="#a0c4ff" />
+        <ambientLight intensity={0.06} color="#6688aa" />
         <directionalLight
           position={[30, 40, 20]}
-          intensity={1.2}
-          color="#ffe8c0"
+          intensity={0.12}
+          color="#aabbdd"
           castShadow
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
@@ -92,18 +92,20 @@ export default function App() {
           shadow-camera-top={40}
           shadow-camera-bottom={-40}
         />
-        <pointLight position={[-20, 30, -10]} intensity={0.3} color="#88bbff" />
-        <hemisphereLight args={['#6688bb', '#334455', 0.4]} />
+        <pointLight position={[-20, 30, -10]} intensity={0.06} color="#6699cc" />
+        <hemisphereLight args={['#446688', '#223344', 0.1]} />
 
         <Sky
           distance={450}
-          sunPosition={[30, 20, -50]}
-          inclination={0.52}
-          azimuth={0.25}
-          turbidity={8}
-          rayleigh={2}
+          sunPosition={[100, -30, 50]}
+          inclination={0.8}
+          azimuth={0.75}
+          turbidity={10}
+          rayleigh={0.5}
+          mieCoefficient={0.005}
+          mieDirectionalG={0.8}
         />
-        <Stars radius={200} depth={80} count={3000} factor={6} fade speed={0.5} />
+        <Stars radius={200} depth={80} count={5000} factor={6} fade speed={0.5} />
 
         <Mountain />
         <Trees />
