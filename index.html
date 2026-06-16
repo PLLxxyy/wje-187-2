@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>雪山滑雪 3D 场景</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body, #root {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        background: #0a1628;
+      }
+      .weather-panel {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: rgba(10, 22, 40, 0.85);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(140, 180, 220, 0.3);
+        border-radius: 12px;
+        padding: 16px 20px;
+        color: #c8ddf0;
+        z-index: 10;
+        min-width: 180px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+      }
+      .weather-panel h3 {
+        font-size: 13px;
+        color: #8ab4d8;
+        margin-bottom: 12px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      .weather-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 0;
+        font-size: 14px;
+      }
+      .weather-item .label {
+        color: #8ab4d8;
+        font-size: 12px;
+      }
+      .weather-item .value {
+        font-weight: 600;
+        color: #e0f0ff;
+      }
+      .lift-panel {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        background: rgba(10, 22, 40, 0.85);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(140, 180, 220, 0.3);
+        border-radius: 12px;
+        padding: 16px 20px;
+        color: #c8ddf0;
+        z-index: 10;
+        min-width: 220px;
+        max-width: 260px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+      }
+      .lift-panel h3 {
+        font-size: 13px;
+        color: #8ab4d8;
+        margin-bottom: 12px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      .lift-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(140, 180, 220, 0.1);
+      }
+      .lift-item:last-child {
+        border-bottom: none;
+      }
+      .lift-name {
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .lift-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .lift-badge {
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .lift-badge.running {
+        background: rgba(46, 204, 113, 0.2);
+        color: #2ecc71;
+        border: 1px solid rgba(46, 204, 113, 0.4);
+      }
+      .lift-badge.maintenance {
+        background: rgba(241, 196, 15, 0.2);
+        color: #f1c40f;
+        border: 1px solid rgba(241, 196, 15, 0.4);
+      }
+      .lift-badge.stopped {
+        background: rgba(231, 76, 60, 0.2);
+        color: #e74c3c;
+        border: 1px solid rgba(231, 76, 60, 0.4);
+      }
+      .lift-queue {
+        font-size: 12px;
+        color: #8ab4d8;
+      }
+      .trail-info-card {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(10, 22, 40, 0.92);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(140, 180, 220, 0.4);
+        border-radius: 16px;
+        padding: 24px 32px;
+        color: #e0f0ff;
+        z-index: 20;
+        min-width: 300px;
+        box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+        animation: fadeIn 0.2s ease-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+        to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      }
+      .trail-info-card h2 {
+        font-size: 20px;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .trail-info-card .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 14px;
+        border-bottom: 1px solid rgba(140, 180, 220, 0.1);
+      }
+      .trail-info-card .info-row:last-of-type {
+        border-bottom: none;
+      }
+      .trail-info-card .info-label {
+        color: #8ab4d8;
+      }
+      .trail-info-card .info-value {
+        font-weight: 600;
+      }
+      .trail-info-card .close-btn {
+        position: absolute;
+        top: 12px;
+        right: 16px;
+        background: none;
+        border: none;
+        color: #8ab4d8;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: background 0.15s;
+      }
+      .trail-info-card .close-btn:hover {
+        background: rgba(140, 180, 220, 0.15);
+      }
+      .difficulty-dot {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+      .difficulty-dot.green { background: #2ecc71; }
+      .difficulty-dot.blue { background: #3498db; }
+      .difficulty-dot.black { background: #1a1a2e; border: 1px solid #555; }
+      .status-badge {
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .status-badge.open {
+        background: rgba(46, 204, 113, 0.2);
+        color: #2ecc71;
+      }
+      .status-badge.partial {
+        background: rgba(241, 196, 15, 0.2);
+        color: #f1c40f;
+      }
+      .status-badge.closed {
+        background: rgba(231, 76, 60, 0.2);
+        color: #e74c3c;
+      }
+      .bottom-bar {
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        background: rgba(10, 22, 40, 0.85);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(140, 180, 220, 0.3);
+        border-radius: 12px;
+        padding: 10px 20px;
+        z-index: 10;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+      }
+      .bottom-bar .view-label {
+        color: #8ab4d8;
+        font-size: 13px;
+        margin-right: 4px;
+      }
+      .bottom-bar button {
+        background: rgba(140, 180, 220, 0.15);
+        border: 1px solid rgba(140, 180, 220, 0.3);
+        color: #c8ddf0;
+        padding: 8px 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.15s;
+        font-family: inherit;
+      }
+      .bottom-bar button:hover {
+        background: rgba(140, 180, 220, 0.3);
+        color: #fff;
+      }
+      .bottom-bar button.active {
+        background: rgba(52, 152, 219, 0.35);
+        border-color: rgba(52, 152, 219, 0.6);
+        color: #fff;
+      }
+      .bottom-bar button.fp-btn {
+        background: rgba(46, 204, 113, 0.2);
+        border-color: rgba(46, 204, 113, 0.4);
+        color: #2ecc71;
+      }
+      .bottom-bar button.fp-btn:hover {
+        background: rgba(46, 204, 113, 0.35);
+      }
+      .trail-select {
+        background: rgba(140, 180, 220, 0.1);
+        border: 1px solid rgba(140, 180, 220, 0.3);
+        color: #c8ddf0;
+        padding: 7px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-family: inherit;
+        cursor: pointer;
+        outline: none;
+      }
+      .trail-select option {
+        background: #0a1628;
+        color: #c8ddf0;
+      }
+      .fp-hud {
+        position: absolute;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(10, 22, 40, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(46, 204, 113, 0.3);
+        border-radius: 10px;
+        padding: 10px 20px;
+        color: #2ecc71;
+        z-index: 10;
+        font-size: 14px;
+        display: flex;
+        gap: 24px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      }
+      .fp-hud span {
+        color: #8ab4d8;
+        font-size: 12px;
+      }
+      .legend {
+        position: absolute;
+        bottom: 70px;
+        left: 16px;
+        background: rgba(10, 22, 40, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(140, 180, 220, 0.2);
+        border-radius: 10px;
+        padding: 10px 14px;
+        z-index: 10;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 3px 0;
+        font-size: 12px;
+        color: #8ab4d8;
+      }
+      .legend-line {
+        width: 20px;
+        height: 3px;
+        border-radius: 2px;
+      }
+      .legend-line.green { background: #2ecc71; }
+      .legend-line.blue { background: #3498db; }
+      .legend-line.black { background: #222; border: 1px solid #555; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
