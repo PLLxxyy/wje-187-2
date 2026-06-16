@@ -113,6 +113,7 @@ export default function App() {
         <SkiTrails
           highlightedTrail={highlightedTrail}
           onTrailClick={handleTrailClick}
+          activeZones={activeZones}
         />
         <TrailLights activeZones={activeZones} />
         <LiftLines />

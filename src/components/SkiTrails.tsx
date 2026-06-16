@@ -5,6 +5,7 @@ import { trails, Trail, difficultyColor } from '../data/trails';
 interface SkiTrailsProps {
   highlightedTrail: string | null;
   onTrailClick: (trail: Trail) => void;
+  activeZones: Record<string, boolean>;
 }
 
 function createTrailCurve(points: { x: number; y: number; z: number }[]): THREE.CatmullRomCurve3 {
@@ -12,14 +13,26 @@ function createTrailCurve(points: { x: number; y: number; z: number }[]): THREE.
   return new THREE.CatmullRomCurve3(vecs, false, 'catmullrom', 0.5);
 }
 
+function darkenColor(hex: string, factor: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const dr = Math.floor(r * factor);
+  const dg = Math.floor(g * factor);
+  const db = Math.floor(b * factor);
+  return `#${dr.toString(16).padStart(2, '0')}${dg.toString(16).padStart(2, '0')}${db.toString(16).padStart(2, '0')}`;
+}
+
 function SingleTrail({
   trail,
   highlighted,
   onClick,
+  lightsOn,
 }: {
   trail: Trail;
   highlighted: boolean;
   onClick: (trail: Trail) => void;
+  lightsOn: boolean;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
 
@@ -30,10 +43,29 @@ function SingleTrail({
     return { tubeGeo, linePoints };
   }, [trail, highlighted]);
 
-  const color = useMemo(() => {
+  const baseColor = useMemo(() => {
     if (trail.status === 'closed') return '#666666';
     return difficultyColor[trail.difficulty];
   }, [trail]);
+
+  const trailColor = useMemo(() => {
+    if (!lightsOn) return darkenColor(baseColor, 0.25);
+    return baseColor;
+  }, [baseColor, lightsOn]);
+
+  const emissiveIntensity = useMemo(() => {
+    if (highlighted) return lightsOn ? 0.7 : 0.3;
+    return lightsOn ? 0.18 : 0.02;
+  }, [highlighted, lightsOn]);
+
+  const markerEmissiveIntensity = useMemo(() => {
+    if (highlighted) return lightsOn ? 0.9 : 0.4;
+    return lightsOn ? 0.25 : 0.04;
+  }, [highlighted, lightsOn]);
+
+  const lineOpacity = useMemo(() => {
+    return lightsOn ? 0.7 : 0.15;
+  }, [lightsOn]);
 
   const handleClick = useCallback((e: any) => {
     e.stopPropagation();
@@ -51,23 +83,23 @@ function SingleTrail({
         onPointerOut={() => { document.body.style.cursor = 'default'; }}
       >
         <meshStandardMaterial
-          color={color}
-          emissive={highlighted ? color : '#000000'}
-          emissiveIntensity={highlighted ? 0.5 : 0}
-          roughness={0.4}
-          metalness={0.2}
+          color={trailColor}
+          emissive={lightsOn ? baseColor : darkenColor(baseColor, 0.3)}
+          emissiveIntensity={emissiveIntensity}
+          roughness={lightsOn ? 0.4 : 0.6}
+          metalness={lightsOn ? 0.2 : 0.1}
           transparent={trail.status === 'closed'}
           opacity={trail.status === 'closed' ? 0.5 : 1}
         />
       </mesh>
 
       {/* Glow for highlighted trail */}
-      {highlighted && (
+      {highlighted && lightsOn && (
         <mesh geometry={tubeGeo}>
           <meshBasicMaterial
-            color={color}
+            color={baseColor}
             transparent
-            opacity={0.2}
+            opacity={0.25}
             side={THREE.BackSide}
           />
         </mesh>
@@ -78,9 +110,9 @@ function SingleTrail({
         <mesh key={idx} position={[p.x, p.y + 0.2, p.z]}>
           <sphereGeometry args={[0.15, 8, 8]} />
           <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={highlighted ? 0.6 : 0.15}
+            color={trailColor}
+            emissive={lightsOn ? baseColor : darkenColor(baseColor, 0.3)}
+            emissiveIntensity={markerEmissiveIntensity}
           />
         </mesh>
       ))}
@@ -96,18 +128,18 @@ function SingleTrail({
           />
         </bufferGeometry>
         <lineDashedMaterial
-          color={color}
+          color={trailColor}
           dashSize={0.3}
           gapSize={0.15}
           transparent
-          opacity={0.6}
+          opacity={lineOpacity}
         />
       </line>
     </group>
   );
 }
 
-export function SkiTrails({ highlightedTrail, onTrailClick }: SkiTrailsProps) {
+export function SkiTrails({ highlightedTrail, onTrailClick, activeZones }: SkiTrailsProps) {
   return (
     <group>
       {trails.map(trail => (
@@ -116,6 +148,7 @@ export function SkiTrails({ highlightedTrail, onTrailClick }: SkiTrailsProps) {
           trail={trail}
           highlighted={highlightedTrail === trail.id}
           onClick={onTrailClick}
+          lightsOn={activeZones[trail.id] ?? false}
         />
       ))}
     </group>
